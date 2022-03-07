@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+FLY_ID = 0
+
 def init_random(myclass,n,vel_scale=2,WORLD_SIZE=20,DELTA_T=1):
     xs = (WORLD_SIZE*np.random.random(n)-WORLD_SIZE/2)/2
     ys = (WORLD_SIZE*np.random.random(n)-WORLD_SIZE/2)/2
@@ -16,6 +18,7 @@ def init_random(myclass,n,vel_scale=2,WORLD_SIZE=20,DELTA_T=1):
 class Fly():
 
     def __init__(self, params) -> None:
+        global FLY_ID
 
         self.defaultParameters = {
             'identity': 'male',
@@ -40,6 +43,8 @@ class Fly():
 
         self.parseParameters(params)
 
+        self.fly_id = FLY_ID
+        FLY_ID += 1
         self.position = np.asarray(self.position,dtype='float32')
         self.velocity = np.asarray(self.velocity,dtype='float32')
 
@@ -154,26 +159,39 @@ class Fly():
                 collision_force += -20*self.limit_vector(target_relative_position, 1)/(distance**2)
         return collision_force
 
-    def perceive_targets(self,targets=[], with_fov=False):
-
-        # get_angle_to_target(self, target)
+    def perceive_targets(self, targets=[], with_fov=False, radius = None):
+        if not radius:
+            radius = self.perception_radius
         if self.target_preference == 'all':
-            close_targets = [target for target in targets if self.get_distance(target) < self.perception_radius]
+            close_targets = [target for target in targets if self.get_distance(target) < radius]
         elif self.target_preference != 'none':
-            close_targets = [target for target in targets if (self.get_distance(target) < self.perception_radius) and (target.identity == self.target_preference)]
+            close_targets = [target for target in targets if (self.get_distance(target) < radius) and (target.identity == self.target_preference)]
         else:
             close_targets = []
-
         if with_fov:
             close_targets = [target for target in close_targets if np.abs(self.get_angle_to_target(target)) < 135]
-
         return close_targets
+
+    # def perceive_targets(self,targets=[], with_fov=False):
+    #     if self.target_preference == 'all':
+    #         close_targets = [target for target in targets if self.get_distance(target) < self.perception_radius]
+    #     elif self.target_preference != 'none':
+    #         close_targets = [target for target in targets if (self.get_distance(target) < self.perception_radius) and (target.identity == self.target_preference)]
+    #     else:
+    #         close_targets = []
+    #     if with_fov:
+    #         close_targets = [target for target in close_targets if np.abs(self.get_angle_to_target(target)) < 135]
+    #     return close_targets
 
     def seek_closest(self,targets=[]):
         seek_force = np.array([0,0])
         distances = [self.get_distance(target) for target in targets if self.get_distance(target)]
         if len(distances) > 0:
-            seek_force = self.seek(targets[np.argmin(distances)])
+            closest_target = targets[np.argmin(distances)]
+            seek_force = self.seek(closest_target)
+            self.seeking_target = closest_target.fly_id
+        else:
+            self.seeking_target = None
         return seek_force
 
     def steering(self,targets=[]):

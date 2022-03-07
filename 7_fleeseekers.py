@@ -4,23 +4,32 @@ import matplotlib.animation as animation
 import matplotlib as mpl
 from bounded_flies import *
 
-class Simple_Seeking_Fly(Fly):
+class Simple_Fleeseeking_Fly(Fly):
     def __init__(self,params):
         Fly.__init__(self,params)
         self.max_trans_speed = 4
         self.target_preference = 'all'
+        self.seeker_radius = 6
+        self.fleer_radius = 1
+        self.perception_radius = self.seeker_radius
 
     def update(self,targets=[]):
 
         self.iframe += 1
         
-        close_targets = self.perceive_targets(targets,with_fov=True)
+        close_seek_targets = self.perceive_targets(targets,with_fov=True,radius=self.seeker_radius)
+        close_flee_targets = self.perceive_targets(targets,with_fov=False,radius=self.fleer_radius)
 
         # calculate forces
         self.acceleration = np.array([0,0],dtype=np.float32)
-        if len(close_targets) > 0:
-            self.acceleration += self.seek_closest(close_targets)
-        elif self.iframe % 5 == 0:
+        if len(close_seek_targets) > 0:
+            self.acceleration += self.seek_closest(close_seek_targets)
+
+        # close_flee_targets = [target for target in close_flee_targets if target.fly_id != self.seeking_target]
+        
+        # if len(close_flee_targets) > 0:
+        #     self.acceleration -= self.seek_closest(close_flee_targets)
+        if np.linalg.norm(self.acceleration) < 0.01:
             self.acceleration += self.random_move()
         self.acceleration += self.get_friction()
 
@@ -50,7 +59,7 @@ class Simple_Fleeing_Fly(Fly):
         self.target_preference = 'male'
         self.max_trans_speed = 5
         self.friction_constant = 0.5
-        self.perception_radius = 6
+        self.perception_radius = 4
 
     def update(self,targets=[]):
 
@@ -81,7 +90,6 @@ class Simple_Fleeing_Fly(Fly):
         self.angle = self.angle + self.rotation_speed*self.DELTA_T
         self.angle = self.wrap_angle(self.angle)
 
-
 def animate(i):
     plt.gca().cla()
     plt.title(flies[0].iframe)
@@ -104,7 +112,7 @@ WORLD_SIZE = 20
 DELTA_T = 0.05
 INTERVAL_ANIMATION = 1
 
-flies = init_random(myclass=Simple_Seeking_Fly,n=2,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
+flies = init_random(myclass=Simple_Fleeseeking_Fly,n=5,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
 target_flies = init_random(myclass=Simple_Fleeing_Fly,n=3,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
 flies.extend(target_flies)
 

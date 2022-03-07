@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from flies import *
+from unbounded_flies import *
 
 class Simple_Moving_Fly(Fly):
     def update(self,targets=[]):
