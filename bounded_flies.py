@@ -123,13 +123,15 @@ class Fly():
             # perpendicular
             perpendicular_ang = self.heading_to_angle(self.position)
             perpendicular_vel = np.dot(self.unit_vector(self.position),self.velocity)
+            # print(f'perpendicular: {perpendicular_vel:.2f}, {perpendicular_ang:.2f}, {self.angle_to_heading(perpendicular_ang)}')
             if perpendicular_vel > 0:
                 perpendicular_vel = -perpendicular_vel
             # parallel
             parallel_ang = perpendicular_ang-np.pi/2
-            parallel_vel = np.linalg.norm(self.velocity)*np.cos(parallel_ang)
-
+            parallel_vel = np.dot(self.unit_vector(self.angle_to_heading(perpendicular_ang-np.pi/2)),self.velocity)
+            # print(f'parallel: {parallel_vel:.2f}, {parallel_ang:.2f}, {self.angle_to_heading(parallel_ang)}')
             self.velocity = parallel_vel*self.angle_to_heading(parallel_ang) + perpendicular_vel*self.angle_to_heading(perpendicular_ang)
+            print(parallel_vel*self.angle_to_heading(parallel_ang), perpendicular_vel*self.angle_to_heading(perpendicular_ang),self.velocity)
         return self.velocity
 
     def random_move(self):

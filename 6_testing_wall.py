@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 import matplotlib as mpl
 from bounded_flies import *
 
-class Simple_Seeking_Fly(Fly):
+class Simple_Moving_Fly(Fly):
     def __init__(self,params):
         Fly.__init__(self,params)
         self.max_trans_speed = 4
@@ -12,58 +12,12 @@ class Simple_Seeking_Fly(Fly):
     def update(self,targets=[]):
 
         self.iframe += 1
-        
-        close_targets = self.perceive_targets(targets)
 
         # calculate forces
         self.acceleration = np.array([0,0],dtype=np.float32)
-        if len(close_targets) > 0:
-            self.acceleration += self.seek_closest(close_targets)
-        elif self.iframe % 5 == 0:
-            self.acceleration += self.random_move()
-        self.acceleration += self.get_friction()
-
-        # update vels
-        pre_velocity = self.velocity.copy()
-        self.velocity = self.velocity + self.acceleration*self.DELTA_T
-        self.velocity = self.limit_vector(self.velocity,self.max_trans_speed)
-        self.velocity = self.bound_collision()
-        self.velocity = self.limit_vector(self.velocity,self.max_trans_speed)
-        self.rotation_speed = self.rotation_constant*(self.heading_to_angle(self.velocity)-self.angle)
-        self.rotation_speed = np.clip(self.rotation_speed, -self.max_rotation_speed, self.max_rotation_speed)
-
-        # update position
-        self.position = self.position + 0.5*(self.velocity+pre_velocity)*self.DELTA_T
-
-        # update angle
-        self.angle = self.angle + self.rotation_speed*self.DELTA_T
-        self.angle = self.wrap_angle(self.angle)
-
-
-class Simple_Fleeing_Fly(Fly):
-
-    def __init__(self,params):
-        Fly.__init__(self,params)
-        self.color = 'm'
-        self.identity = 'female'
-        self.target_preference = 'male'
-        self.max_trans_speed = 5
-        self.friction_constant = 0.5
-        self.perception_radius = 6
-
-    def update(self,targets=[]):
-
-        self.iframe += 1
-
-        close_targets = self.perceive_targets(targets)
-
-        # calculate forces
-        self.acceleration = np.array([0,0],dtype=np.float32)
-        if len(close_targets) > 0:
-            self.acceleration -= self.seek_closest(close_targets)
         self.acceleration += self.random_move()
-        self.acceleration += self.get_friction()
-        
+        # self.acceleration += self.get_friction()
+
         # update vels
         pre_velocity = self.velocity.copy()
         self.velocity = self.velocity + self.acceleration*self.DELTA_T
@@ -101,14 +55,19 @@ def animate(i):
 
 WORLD_SIZE = 20
 DELTA_T = 0.05
-INTERVAL_ANIMATION = 1
+INTERVAL_ANIMATION = 100
 
-flies = init_random(myclass=Simple_Seeking_Fly,n=3,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
-target_flies = init_random(myclass=Simple_Fleeing_Fly,n=6,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
-flies.extend(target_flies)
+n = 5
+angles = np.linspace(0,2*np.pi,n+1)[:-1]
+xs = 16*np.cos(angles)
+ys = 16*np.sin(angles)
+vxs = 2*np.cos(angles)
+vys = 2*np.sin(angles)
+flies = []
+for x, y, vx, vy, angle in zip(xs,ys,vxs,vys,angles):
+    flies.append(Simple_Moving_Fly({'position': (x,y), 'velocity': (vx,vy), 'angle':angle, 'WORLD_SIZE':WORLD_SIZE, 'DELTA_T':DELTA_T}))
 
 # create animation using the animate() function
 fig = plt.figure(figsize=[10,10])
 myAnimation = animation.FuncAnimation(fig, animate, interval=INTERVAL_ANIMATION)
 plt.show()
-
