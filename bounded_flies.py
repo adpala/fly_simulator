@@ -27,7 +27,7 @@ class Fly():
             'max_trans_speed': 5,
             'max_rotation_speed': 5,
             'random_move_mag': 10,
-            'collision_radius': 10,
+            'collision_radius': 2,
             'color': 'r',
             'rotation_constant': 10,
             'iframe': 0,
@@ -180,9 +180,9 @@ class Fly():
         if show_velocity:
             ax.plot([self.position[0], self.position[0]+self.velocity[0]], [self.position[1], self.position[1]+self.velocity[1]], f'-b')
         if show_perception:
-            perception_circle = mpl.patches.Circle(self.position, radius=self.perception_radius, fill=False, facecolor=None, edgecolor='b')
+            perception_circle = mpl.patches.Circle(self.position, radius=self.perception_radius, fill=False, facecolor=None, edgecolor=f'{self.color}',linestyle='--', lw=0.5)
             ax.add_artist(perception_circle)
         if show_collision:
-            collision_circle = mpl.patches.Circle(self.position, radius=self.collision_radius, fill=False, facecolor=None, edgecolor='r')
+            collision_circle = mpl.patches.Circle(self.position, radius=self.collision_radius, fill=False, facecolor=None, edgecolor='k',linestyle='--', lw=0.5)
             ax.add_artist(collision_circle)
 

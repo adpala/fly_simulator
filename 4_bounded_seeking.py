@@ -91,14 +91,15 @@ def animate(i):
         flies[ii].update([flies[jj] for jj in range(len(flies)) if jj != ii])
 
     for fly in flies:
-        fly.plot(plt.gca(),show_velocity=True, show_perception=fly.identity == 'male')
+        # fly.plot(plt.gca(), show_velocity=True, show_perception=fly.identity == 'male')
+        fly.plot(plt.gca(), show_velocity=True, show_perception=True, show_collision = False)
 
-    world_circle = mpl.patches.Circle((0,0), radius=WORLD_SIZE, fill=False, facecolor=None, edgecolor='k', linestyle='--', lw=2)
+    world_circle = mpl.patches.Circle((0,0), radius=WORLD_SIZE, fill=False, facecolor=None, edgecolor='k', linestyle='-', lw=2)
     plt.gca().add_artist(world_circle)
     wall_margin_circle = mpl.patches.Circle((0,0), radius=WORLD_SIZE-flies[0].WALL_MARGIN, fill=False, facecolor=None, edgecolor='k', linestyle='--', lw=2)
     plt.gca().add_artist(wall_margin_circle)
 
-WORLD_SIZE = 20
+WORLD_SIZE = 30
 DELTA_T = 0.05
 INTERVAL_ANIMATION = 100
 
