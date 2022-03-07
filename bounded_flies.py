@@ -117,6 +117,9 @@ class Fly():
             vector *= min(limit_mag, mag)/mag
         return vector
 
+    def get_angle_to_target(self, target):
+        return self.heading_to_angle(target.position - self.position)
+
     def bound_collision(self):
         r = np.linalg.norm(self.position)
         if r > (self.WORLD_SIZE-self.WALL_MARGIN):
@@ -131,7 +134,7 @@ class Fly():
             parallel_vel = np.dot(self.unit_vector(self.angle_to_heading(perpendicular_ang-np.pi/2)),self.velocity)
             # print(f'parallel: {parallel_vel:.2f}, {parallel_ang:.2f}, {self.angle_to_heading(parallel_ang)}')
             self.velocity = parallel_vel*self.angle_to_heading(parallel_ang) + perpendicular_vel*self.angle_to_heading(perpendicular_ang)
-            print(parallel_vel*self.angle_to_heading(parallel_ang), perpendicular_vel*self.angle_to_heading(perpendicular_ang),self.velocity)
+            # print(parallel_vel*self.angle_to_heading(parallel_ang), perpendicular_vel*self.angle_to_heading(perpendicular_ang),self.velocity)
         return self.velocity
 
     def random_move(self):
@@ -139,7 +142,7 @@ class Fly():
         # return (np.random.random(2)-0.5)*self.random_move_mag
 
     def seek(self,target):
-        target_direction = self.angle_to_heading(self.heading_to_angle(target.position - self.position))
+        target_direction = self.angle_to_heading(self.get_angle_to_target(target))
         return target_direction*self.max_trans_speed - self.velocity
 
     def collisions(self,targets=[]):
@@ -151,14 +154,20 @@ class Fly():
                 collision_force += -20*self.limit_vector(target_relative_position, 1)/(distance**2)
         return collision_force
 
-    def perceive_targets(self,targets=[]):
-        if self.target_preference == 'all':
-            return [target for target in targets if self.get_distance(target) < self.perception_radius]
-        elif self.target_preference != 'none':
-            return [target for target in targets if (self.get_distance(target) < self.perception_radius) and (target.identity == self.target_preference)]
-        else:
-            return []
+    def perceive_targets(self,targets=[], with_fov=False):
 
+        # get_angle_to_target(self, target)
+        if self.target_preference == 'all':
+            close_targets = [target for target in targets if self.get_distance(target) < self.perception_radius]
+        elif self.target_preference != 'none':
+            close_targets = [target for target in targets if (self.get_distance(target) < self.perception_radius) and (target.identity == self.target_preference)]
+        else:
+            close_targets = []
+
+        if with_fov:
+            close_targets = [target for target in close_targets if np.abs(self.get_angle_to_target(target)) < 135]
+
+        return close_targets
 
     def seek_closest(self,targets=[]):
         seek_force = np.array([0,0])
@@ -174,7 +183,7 @@ class Fly():
             align_velocity = np.mean([target.velocity for target in targets], axis = 0)
         return self.limit_vector(align_velocity - self.velocity, self.max_steering_force)
 
-    def plot(self,ax=None,show_perception=False,show_collision=False,show_velocity=False):
+    def plot(self,ax=None,show_perception=False,show_collision=False,show_velocity=False,with_fov=False):
         if not ax:
             ax = plt.gca()
         ax.plot(*self.position, f'o{self.color}')
@@ -182,7 +191,10 @@ class Fly():
         if show_velocity:
             ax.plot([self.position[0], self.position[0]+self.velocity[0]], [self.position[1], self.position[1]+self.velocity[1]], f'-b')
         if show_perception:
-            perception_circle = mpl.patches.Circle(self.position, radius=self.perception_radius, fill=False, facecolor=None, edgecolor=f'{self.color}',linestyle='--', lw=0.5)
+            if with_fov:
+                perception_circle = mpl.patches.Wedge(self.position, r=self.perception_radius, theta1=self.angle*180/np.pi-135, theta2=self.angle*180/np.pi+135, alpha=0.1, color=f'{self.color}')
+            else:
+                perception_circle = mpl.patches.Circle(self.position, radius=self.perception_radius, fill=False, facecolor=None, edgecolor=f'{self.color}',linestyle='--', lw=0.5)
             ax.add_artist(perception_circle)
         if show_collision:
             collision_circle = mpl.patches.Circle(self.position, radius=self.collision_radius, fill=False, facecolor=None, edgecolor='k',linestyle='--', lw=0.5)

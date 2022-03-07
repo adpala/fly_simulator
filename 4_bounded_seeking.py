@@ -13,7 +13,7 @@ class Simple_Seeking_Fly(Fly):
 
         self.iframe += 1
         
-        close_targets = self.perceive_targets(targets)
+        close_targets = self.perceive_targets(targets,with_fov=True)
 
         # calculate forces
         self.acceleration = np.array([0,0],dtype=np.float32)
@@ -91,8 +91,8 @@ def animate(i):
         flies[ii].update([flies[jj] for jj in range(len(flies)) if jj != ii])
 
     for fly in flies:
-        # fly.plot(plt.gca(), show_velocity=True, show_perception=fly.identity == 'male')
-        fly.plot(plt.gca(), show_velocity=True, show_perception=True, show_collision = False)
+        fly.plot(plt.gca(), show_velocity=True, show_perception=fly.identity == 'male', with_fov=True)
+        # fly.plot(plt.gca(), show_velocity=True, show_perception=True, show_collision = False)
 
     world_circle = mpl.patches.Circle((0,0), radius=WORLD_SIZE, fill=False, facecolor=None, edgecolor='k', linestyle='-', lw=2)
     plt.gca().add_artist(world_circle)
@@ -103,8 +103,8 @@ WORLD_SIZE = 20
 DELTA_T = 0.05
 INTERVAL_ANIMATION = 1
 
-flies = init_random(myclass=Simple_Seeking_Fly,n=3,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
-target_flies = init_random(myclass=Simple_Fleeing_Fly,n=6,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
+flies = init_random(myclass=Simple_Seeking_Fly,n=2,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
+target_flies = init_random(myclass=Simple_Fleeing_Fly,n=3,vel_scale=2,WORLD_SIZE=WORLD_SIZE, DELTA_T=DELTA_T)
 flies.extend(target_flies)
 
 # create animation using the animate() function
